@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07090d">
+<title>CYBER BOOTH | Cybersecurity Investigation Photobooth</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<noscript><p class="noscript">JavaScript is required to run the photobooth.</p></noscript>
+<main>
+
+<!-- SCREEN A: WELCOME -->
+<section id="s-welcome" class="screen active" aria-labelledby="h-welcome">
+  <p class="tag" data-cfg="status">CASE FILE // PHOTO EVIDENCE</p>
+  <h1 id="h-welcome"><span data-cfg="eventName">CYBER BOOTH</span><br><span class="h1-sub" data-cfg="title">CYBERSECURITY INVESTIGATION</span></h1>
+  <p class="sub">CREATE YOUR PHOTO EVIDENCE</p>
+  <ol class="how">
+    <li>Allow camera access when your browser asks.</li>
+    <li>Three pictures are taken automatically, each after a 3-second countdown.</li>
+    <li>Review them, then download your photo strip.</li>
+  </ol>
+  <p class="privacy">Photos stay on your phone. Nothing is uploaded.</p>
+  <button id="btn-start" class="btn primary">START INVESTIGATION</button>
+  <p id="offline-badge" class="badge" hidden>OFFLINE READY</p>
+</section>
+
+<!-- SCREEN B + C: CAMERA SETUP AND AUTOMATIC CAPTURE -->
+<section id="s-camera" class="screen" aria-label="Camera">
+  <div class="bar">
+    <button id="btn-cancel" class="btn ghost">CANCEL</button>
+    <span id="progress" class="mono">CAMERA SETUP</span>
+  </div>
+  <div class="stage" id="stage">
+    <video id="video" playsinline muted autoplay></video>
+    <div class="corners"></div>
+    <div id="countdown" aria-live="assertive"></div>
+    <div id="flash"></div>
+    <div id="cam-msg" role="alert" hidden>
+      <p id="cam-msg-text"></p>
+      <button id="btn-retry" class="btn primary">TRY CAMERA AGAIN</button>
+    </div>
+  </div>
+  <div id="dots" class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+  <p id="hint" class="hint mono">Frame your face inside the box.</p>
+  <div class="row">
+    <button id="btn-switch" class="btn ghost" hidden>SWITCH CAMERA</button>
+    <button id="btn-begin" class="btn primary" disabled>START COUNTDOWN</button>
+  </div>
+</section>
+
+<!-- SCREEN D: REVIEW -->
+<section id="s-review" class="screen" aria-labelledby="h-review">
+  <h2 id="h-review">Review your evidence</h2>
+  <div class="grid" id="review-grid"></div>
+  <div class="row">
+    <button id="btn-retake-all" class="btn ghost">RETAKE ALL</button>
+    <button id="btn-generate" class="btn primary">CREATE PHOTO STRIP</button>
+  </div>
+</section>
+
+<!-- SCREEN E: FINISHED STRIP -->
+<section id="s-done" class="screen" aria-labelledby="h-done">
+  <h2 id="h-done">Photo evidence ready</h2>
+  <img id="strip-img" class="strip" alt="Your finished vertical photo strip with three photos in the cybersecurity case-file frame">
+  <p id="dl-note" class="hint mono" role="status"></p>
+  <p id="ios-note" class="hint" hidden>On iPhone: if the download does not start, tap DOWNLOAD and choose Save Image in the share sheet, or press and hold the image and choose Add to Photos.</p>
+  <div class="row">
+    <button id="btn-download" class="btn primary">DOWNLOAD PHOTO EVIDENCE</button>
+    <button id="btn-new" class="btn ghost">START NEW INVESTIGATION</button>
+  </div>
+</section>
+
+</main>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges" role="img" aria-label="Pixel camera">
+    <rect x="2" y="6" width="20" height="15" fill="#070a12"/>
+    <rect x="8" y="3" width="8" height="4" fill="#070a12"/>
+    <rect x="4" y="8" width="16" height="11" fill="#f7f1df"/>
+    <rect x="6" y="10" width="12" height="7" fill="#070a12"/>
+    <rect x="9" y="11" width="6" height="5" fill="#4de8ff"/>
+    <rect x="11" y="13" width="2" height="1" fill="#070a12"/>
+    <rect x="17" y="8" width="2" height="2" fill="#ff5ca8"/>
+    <rect x="5" y="7" width="4" height="2" fill="#f7f1df"/>
+  </svg>
