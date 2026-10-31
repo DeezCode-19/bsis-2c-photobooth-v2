@@ -21,6 +21,7 @@ Everything runs in the browser. There is no backend, database, login, cloud uplo
 - Chunky black outlines, white sticker borders, colourful pixel shadows, arcade buttons, and retro-computer cards.
 - Pixel-art SVG logo, favicon, and UI icons.
 - Camera preview mirrored for the front camera, including the saved photo, so the result matches what you saw.
+- Camera zoom uses the track's hardware zoom when supported; otherwise visual preview zoom crops the saved photo to match.
 - Responsive desktop, tablet, and phone layouts.
 - Local-only photo processing using `<video>`, `<canvas>`, and `Blob` URLs.
 - PWA manifest and service worker for installability and offline use.
@@ -191,7 +192,8 @@ A plain `http://192.168.x.x` address on your Wi-Fi is usually **not** a secure c
 2. Click **START INVESTIGATION**.
 3. When the browser asks for camera permission, choose **Allow**.
 4. You should see the live preview inside the framed stage.
-5. Click **START COUNTDOWN**. You should see `3`, `2`, `1`, a flash, and then the review screen after all three photos.
+5. Try the zoom slider and the `−` / `+` buttons. The label identifies hardware zoom or visual-only zoom.
+6. Click **START COUNTDOWN**. You should see `3`, `2`, `1`, a flash, and then the review screen after all three photos.
 
 ### If the camera is blocked
 
@@ -220,6 +222,9 @@ Do not add a tunnel or deployment dependency to the project itself; those are on
 - `navigator.mediaDevices.getUserMedia({ video: ..., audio: false })` requests only the camera. The microphone is never requested.
 - The preview is mirrored for the front-facing camera.
 - The stage uses the same 900:700 aspect ratio as the photo slots in the strip, so the preview crop and saved crop match.
+- Zoom reads the track's `getCapabilities()` and `getSettings()` values, then applies supported hardware levels with `applyConstraints()`.
+- If hardware zoom is not exposed or cannot be applied, CSS scales the centered preview; `grab()` uses the same centered crop for the saved photo.
+- Zoom returns to the new camera's default when the camera is restarted or switched. Hardware zoom availability depends on the device and browser; visual zoom is not optical zoom.
 
 ### Capture
 

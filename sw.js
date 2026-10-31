@@ -1,7 +1,7 @@
 /* Service Worker: precaches the app shell so the booth runs offline after one successful visit.
    Bump CACHE when you change any file, otherwise returning visitors keep the old version.
    CONFIG.cacheName in app.js must use the same version string. */
-const CACHE = 'bsis2c-photobooth-v5';
+const CACHE = 'bsis2c-photobooth-v6';
 const ASSETS = [
   './',
   './index.html',

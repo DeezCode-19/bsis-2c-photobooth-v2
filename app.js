@@ -40,7 +40,7 @@ const CONFIG = {
   shots: 3,
   countdownSeconds: 3,
   prepMs: 1200,
-  cacheName: 'bsis2c-photobooth-v5' // must match CACHE in sw.js
+  cacheName: 'bsis2c-photobooth-v6' // must match CACHE in sw.js
 };
 
 const $ = id => document.getElementById(id);
@@ -56,6 +56,8 @@ let token = 0, busy = false;                  // token invalidates running timer
 let pendingList = [];                         // indices to capture in the next run
 let stripBlob = null, stripUrl = null;
 let camToken = 0;                             // ignores a late getUserMedia result
+let zoom = { mode: 'visual', track: null, min: 1, max: 3, step: 0.1, value: 1 };
+let zoomToken = 0, zoomTask = Promise.resolve();
 const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 // Apply config text to any element with data-cfg.
@@ -78,7 +80,118 @@ function stopCamera() {
     stream = null;
   }
   const video = $('video');
-  if (video) video.srcObject = null;
+  if (video) {
+    video.srcObject = null;
+    video.classList.remove('visual-zoom');
+    video.style.removeProperty('--visual-zoom');
+  }
+  resetZoom();
+}
+
+function resetZoom() {
+  zoomToken++;
+  zoomTask = Promise.resolve();
+  zoom = { mode: 'visual', track: null, min: 1, max: 3, step: 0.1, value: 1 };
+  updateZoomUI();
+}
+
+function clampZoom(value) {
+  const clamped = Math.min(zoom.max, Math.max(zoom.min, Number(value)));
+  const stepped = zoom.step > 0
+    ? zoom.min + Math.round((clamped - zoom.min) / zoom.step) * zoom.step
+    : clamped;
+  return Number(Math.min(zoom.max, Math.max(zoom.min, stepped)).toFixed(4));
+}
+
+function updateZoomUI() {
+  const slider = $('zoom-slider');
+  slider.min = String(zoom.min);
+  slider.max = String(zoom.max);
+  slider.step = zoom.step > 0 ? String(zoom.step) : 'any';
+  slider.value = String(zoom.value);
+  $('zoom-value').textContent = `${Math.round(zoom.value * 100)}%`;
+  $('zoom-mode').textContent = zoom.mode === 'hardware'
+    ? 'HARDWARE CAMERA ZOOM'
+    : 'VISUAL ONLY - SAVED PHOTO CROP MATCHES';
+
+  const video = $('video');
+  video.classList.toggle('visual-zoom', zoom.mode === 'visual' && Boolean(zoom.track));
+  if (zoom.mode === 'visual' && zoom.track) {
+    video.style.setProperty('--visual-zoom', String(zoom.value));
+  } else {
+    video.style.removeProperty('--visual-zoom');
+  }
+  updateZoomControls();
+}
+
+function updateZoomControls() {
+  const active = Boolean(stream && zoom.track && !busy);
+  $('zoom-slider').disabled = !active || zoom.max <= zoom.min;
+  $('btn-zoom-out').disabled = !active || zoom.value <= zoom.min;
+  $('btn-zoom-in').disabled = !active || zoom.value >= zoom.max;
+}
+
+function configureZoom(track) {
+  let capabilities = null;
+  try {
+    if (track.getCapabilities) capabilities = track.getCapabilities();
+  } catch (error) {
+    console.warn('Could not read camera zoom capabilities; using visual zoom.', error);
+  }
+
+  const range = capabilities && capabilities.zoom;
+  if (range && Number.isFinite(range.min) && Number.isFinite(range.max) &&
+      range.max >= range.min && typeof track.applyConstraints === 'function') {
+    let settings = {};
+    try {
+      if (track.getSettings) settings = track.getSettings();
+    } catch (error) {
+      console.warn('Could not read the camera zoom setting; using its 1x default.', error);
+    }
+    const defaultZoom = Number.isFinite(settings.zoom)
+      ? settings.zoom
+      : Math.min(range.max, Math.max(range.min, 1));
+    zoom = {
+      mode: 'hardware',
+      track,
+      min: range.min,
+      max: range.max,
+      step: Number.isFinite(range.step) && range.step > 0 ? range.step : 0,
+      value: Math.min(range.max, Math.max(range.min, defaultZoom))
+    };
+  } else {
+    zoom = { mode: 'visual', track, min: 1, max: 3, step: 0.1, value: 1 };
+  }
+  updateZoomUI();
+}
+
+function changeZoom(value) {
+  const request = ++zoomToken;
+  const target = clampZoom(value);
+  const track = zoom.track;
+  zoom.value = target;
+  updateZoomUI();
+
+  if (zoom.mode !== 'hardware' || !track) return Promise.resolve();
+
+  zoomTask = zoomTask.catch(error => {
+    console.error('Previous camera zoom change failed.', error);
+  }).then(async () => {
+    if (request !== zoomToken || track !== zoom.track) return;
+    try {
+      await track.applyConstraints({ advanced: [{ zoom: target }] });
+    } catch (error) {
+      if (request !== zoomToken || track !== zoom.track) return;
+      console.warn('Hardware zoom is unavailable; using visual zoom instead.', error);
+      zoom.mode = 'visual';
+      zoom.min = 1;
+      zoom.max = 3;
+      zoom.step = 0.1;
+      zoom.value = clampZoom(target);
+    }
+    if (request === zoomToken && track === zoom.track) updateZoomUI();
+  });
+  return zoomTask;
 }
 
 function camError(message) {
@@ -165,6 +278,7 @@ async function startCamera() {
   if (settings.facingMode) facing = settings.facingMode === 'environment' ? 'environment' : 'user';
   mirrored = facing === 'user';                 // mirror selfie preview AND the saved photo
   video.classList.toggle('mirror', mirrored);
+  if (track) configureZoom(track);
 
   if (track) {
     track.addEventListener('ended', () => {     // browser/OS interrupted the camera
@@ -183,6 +297,7 @@ async function startCamera() {
 
   if (myToken !== camToken || stream !== nextStream) return false;
   $('btn-begin').disabled = !video.videoWidth;
+  updateZoomControls();
   return Boolean(video.videoWidth);
 }
 
@@ -239,6 +354,10 @@ function grab() {
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
+  if (zoom.mode === 'visual') {
+    sw /= zoom.value;
+    sh /= zoom.value;
+  }
   if (mirrored) {
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
@@ -258,8 +377,10 @@ async function runCapture() {
   $('btn-switch').hidden = true;
   $('btn-cancel').disabled = false;
   $('stage').setAttribute('aria-busy', 'true');
+  updateZoomControls();
 
   try {
+    await zoomTask;
     for (let n = 0; n < list.length; n++) {
       const index = list[n];
       $('progress').textContent = `${CONFIG.evidencePrefix}${pad(index + 1)} / ${pad(CONFIG.shots)}`;
@@ -739,6 +860,13 @@ function newSession() {
 // ---- Wiring -----------------------------------------------------------
 $('btn-start').addEventListener('click', () => enterCamera(allIndices()));
 $('btn-begin').addEventListener('click', runCapture);
+$('zoom-slider').addEventListener('input', event => changeZoom(event.currentTarget.value));
+$('btn-zoom-out').addEventListener('click', () => {
+  changeZoom(zoom.value - (zoom.step || 0.1));
+});
+$('btn-zoom-in').addEventListener('click', () => {
+  changeZoom(zoom.value + (zoom.step || 0.1));
+});
 $('btn-retry').addEventListener('click', async () => {
   resetCaptureUI();
   await startCamera();

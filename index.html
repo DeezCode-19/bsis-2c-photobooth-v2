@@ -156,6 +156,17 @@
           </div>
         </div>
 
+        <div class="zoom-control" role="group" aria-label="Camera zoom controls">
+          <div class="zoom-row">
+            <button id="btn-zoom-out" class="zoom-button" type="button" aria-label="Zoom out" disabled>&minus;</button>
+            <input id="zoom-slider" type="range" min="1" max="3" step="0.1" value="1"
+              aria-label="Zoom level" aria-describedby="zoom-mode" disabled>
+            <button id="btn-zoom-in" class="zoom-button" type="button" aria-label="Zoom in" disabled>+</button>
+            <output id="zoom-value" for="zoom-slider" aria-live="polite">100%</output>
+          </div>
+          <p id="zoom-mode" class="zoom-mode">VISUAL ONLY - SAVED PHOTO CROP MATCHES</p>
+        </div>
+
         <div id="dots" class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
         <p id="hint" class="hint">Frame your face inside the box.</p>
 
