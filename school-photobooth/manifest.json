@@ -1,2 +1,0 @@
-{"name":"CYBER BOOTH Photobooth","short_name":"CYBER BOOTH","description":"Take a three-photo evidence strip. Photos never leave your device.","start_url":"./index.html","scope":"./","display":"standalone","orientation":"portrait","background_color":"#050505","theme_color":"#050505",
-"icons":[{"src":"assets/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"assets/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"assets/favicon.svg","sizes":"any","type":"image/svg+xml"}]}
